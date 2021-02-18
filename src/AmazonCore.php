@@ -4,6 +4,7 @@ namespace KeithBrink\AmazonMws;
 
 use Config;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Log;
 
 /**
@@ -358,7 +359,7 @@ abstract class AmazonCore
     }
 
     /**
-     * Checks whether or not the response is OK.
+     * Checks whether or not the response is OK or not..
      *
      * Verifies whether or not the HTTP response has the 200 OK code. If the code
      * is not 200, the incident and error message returned are logged.
@@ -434,8 +435,10 @@ abstract class AmazonCore
     public function validateAndSetConfig($config)
     {
         $valid = true;
-        if (array_key_exists('merchantId', $config) && $config['merchantId']) {
-            $this->options['SellerId'] = $config['merchantId'];
+        //DJ added the secret key to profile!
+
+        if (Auth::user()->profile->secret_key) {
+            $this->options['SellerId'] = Auth::user()->profile->secret_key;
         } else {
             $valid = false;
             $this->log('Merchant ID is missing!', 'Warning');
@@ -446,15 +449,21 @@ abstract class AmazonCore
             $valid = false;
             $this->log('Marketplace ID is missing!', 'Warning');
         }
-        if (array_key_exists('keyId', $config) && $config['keyId']) {
-            $this->options['AWSAccessKeyId'] = $config['keyId'];
-        } else {
+//        if (array_key_exists('keyId', $config) && $config['keyId']) {
+//            $this->options['AWSAccessKeyId'] = $config['keyId'];
+//        }
+//
+        if (Auth::user()->profile->keyID) {
+            $this->options['AWSAccessKeyId'] = Auth::user()->profile->keyID;
+        }
+        else {
             $valid = false;
             $this->log('Access Key ID is missing!', 'Warning');
         }
-        if (array_key_exists('secretKey', $config) && $config['secretKey']) {
+       if (array_key_exists('secretKey', $config) && $config['secretKey']) {
             $this->secretKey = $config['secretKey'];
-        } else {
+        }
+        else {
             $valid = false;
             $this->log('Secret Key is missing!', 'Warning');
         }
@@ -464,8 +473,8 @@ abstract class AmazonCore
             $valid = false;
             $this->log('Service URL is missing!', 'Warning');
         }
-        if (array_key_exists('mwsAuthToken', $config) && $config['mwsAuthToken']) {
-            $this->options['MWSAuthToken'] = $config['mwsAuthToken'];
+        if (Auth::user()->profile->market) {
+            $this->options['MWSAuthToken'] = Auth::user()->profile->market;
         }
         if (array_key_exists('muteLog', $config) && $config['muteLog']) {
             $this->muteLog = $config['muteLog'];
